@@ -12,15 +12,18 @@ local espEnabled = false
 local flySpeed = 50
 
 -- --- СОЗДАНИЕ GUI ---
-local ScreenGui = Instance.new("ScreenGui", Player.PlayerGui)
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AdminPanel"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 200, 0, 250)
+MainFrame.Size = UDim2.new(0, 200, 0, 220)
 MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- Устарело, но для тестов работает
+MainFrame.Draggable = true -- Позволяет перетаскивать меню мышкой
 
 local function createButton(text, pos, color)
     local btn = Instance.new("TextButton", MainFrame)
@@ -31,6 +34,7 @@ local function createButton(text, pos, color)
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.SourceSansBold
     btn.TextSize = 18
+    btn.BorderSizePixel = 0
     return btn
 end
 
@@ -38,11 +42,11 @@ local aimBtn = createButton("Aim: OFF", UDim2.new(0, 10, 0, 20), Color3.fromRGB(
 local espBtn = createButton("ESP (WH): OFF", UDim2.new(0, 10, 0, 80), Color3.fromRGB(80, 0, 0))
 local flyBtn = createButton("Fly: OFF", UDim2.new(0, 10, 0, 140), Color3.fromRGB(80, 0, 0))
 
--- --- ФУНКЦИЯ AIM (Наведение на ближайшего) ---
+-- --- ФУНКЦИЯ AIM ---
 local function getClosestPlayer()
     local closest = nil
     local dist = math.huge
-    for _, p in pairs(game.Players:GetPlayers()) do
+    for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             local pos, onScreen = Camera:WorldToScreenPoint(p.Character.HumanoidRootPart.Position)
             if onScreen then
@@ -66,16 +70,19 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- --- ФУНКЦИЯ ESP (Подсветка игроков) ---
+-- --- ФУНКЦИЯ ESP ---
 local function updateESP()
-    for _, p in pairs(game.Players:GetPlayers()) do
+    for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
-            local highlight = p.Character:FindFirstChild("Highlight")
+            local highlight = p.Character:FindFirstChild("AdminHighlight")
             if espEnabled then
                 if not highlight then
-                    highlight = Instance.new("Highlight", p.Character)
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "AdminHighlight"
                     highlight.FillColor = Color3.new(1, 0, 0)
+                    highlight.FillTransparency = 0.5
                     highlight.OutlineColor = Color3.new(1, 1, 1)
+                    highlight.Parent = p.Character
                 end
             elseif highlight then
                 highlight:Destroy()
@@ -84,27 +91,30 @@ local function updateESP()
     end
 end
 
--- --- ФУНКЦИЯ FLY (Полет) ---
-local bodyVelocity, bodyGyro
+-- --- ФУНКЦИЯ FLY ---
+local bv, bg
 RunService.RenderStepped:Connect(function()
-    if flyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = Player.Character.HumanoidRootPart
-        if not bodyVelocity then
-            bodyVelocity = Instance.new("BodyVelocity", hrp)
-            bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * math.huge
-            bodyGyro = Instance.new("BodyGyro", hrp)
-            bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * math.huge
+    local char = Player.Character
+    if flyEnabled and char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        if not bv then
+            bv = Instance.new("BodyVelocity", hrp)
+            bv.MaxForce = Vector3.new(1, 1, 1) * math.huge
+            bg = Instance.new("BodyGyro", hrp)
+            bg.MaxTorque = Vector3.new(1, 1, 1) * math.huge
         end
         
         local moveDir = Vector3.new(0,0,0)
         if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir += Camera.CFrame.LookVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir -= Camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir -= Camera.CFrame.LookVector:Cross(Vector3.new(0,1,0)) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir += Camera.CFrame.LookVector:Cross(Vector3.new(0,1,0)) end
         
-        bodyVelocity.Velocity = moveDir * flySpeed
-        bodyGyro.CFrame = Camera.CFrame
+        bv.Velocity = moveDir * flySpeed
+        bg.CFrame = Camera.CFrame
     else
-        if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
-        if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
+        if bv then bv:Destroy() bv = nil end
+        if bg then bg:Destroy() bg = nil end
     end
 end)
 
@@ -128,7 +138,9 @@ flyBtn.MouseButton1Click:Connect(function()
     flyBtn.BackgroundColor3 = flyEnabled and Color3.fromRGB(0, 80, 0) or Color3.fromRGB(80, 0, 0)
 end)
 
--- Обновление ESP при появлении новых игроков
-game.Players.PlayerAdded:Connect(function()
-    if espEnabled then wait(1) updateESP() end
+-- Периодическое обновление ESP
+task.spawn(function()
+    while task.wait(1) do
+        if espEnabled then updateESP() end
+    end
 end)
