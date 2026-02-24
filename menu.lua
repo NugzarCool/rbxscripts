@@ -1,8 +1,8 @@
 local Players = game:GetService("Players")
-local Player = game.Players.LocalPlayer
-local Mouse = Player:GetMouse()
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
 local Camera = workspace.CurrentCamera
 
 -- Состояния функций
