@@ -119,9 +119,16 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- --- ЛОГИКА КНОПОК ---
-UserInputService.InputBegan:Connect(function(input, processed)
-    if not processed and input.KeyCode == Enum.KeyCode.E then
-        aimEnabledd = not aimEnabled
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    -- Проверяем, не пишет ли игрок в этот момент в чат
+    if gameProcessed then return end
+
+    -- Проверяем нажатие именно клавиши E
+    if input.KeyCode == Enum.KeyCode.E then
+        aimEnabled = not aimEnabled
+        
+        -- Здесь логика для клиента (например, открыть UI)
+        -- Если нужно изменить что-то на сервере, понадобится RemoteEvent
     end
 end)
 
