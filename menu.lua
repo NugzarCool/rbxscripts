@@ -124,8 +124,21 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
 
     -- Проверяем нажатие именно клавиши E
-    if input.KeyCode == Enum.KeyCode.E then
+    if input.KeyCode == Enum.KeyCode.F then
         aimEnabled = not aimEnabled
+        
+        -- Здесь логика для клиента (например, открыть UI)
+        -- Если нужно изменить что-то на сервере, понадобится RemoteEvent
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    -- Проверяем, не пишет ли игрок в этот момент в чат
+    if gameProcessed then return end
+
+    -- Проверяем нажатие именно клавиши E
+    if input.KeyCode == Enum.KeyCode.E then
+        flyEnabled = not flyEnabled
         
         -- Здесь логика для клиента (например, открыть UI)
         -- Если нужно изменить что-то на сервере, понадобится RemoteEvent
