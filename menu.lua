@@ -119,6 +119,12 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- --- ЛОГИКА КНОПОК ---
+UIS.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.E then
+        aimEnabledd = not aimEnabled
+    end
+end)
+
 aimBtn.MouseButton1Click:Connect(function()
     aimEnabled = not aimEnabled
     aimBtn.Text = "Aim: " .. (aimEnabled and "ON" or "OFF")
