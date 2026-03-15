@@ -59,7 +59,7 @@ mainButton.MouseButton1Click:Connect(toggleFly)
 
 -- Управление клавишей E
 UIS.InputBegan:Connect(function(input, processed)
-    if not processed and input.KeyCode == Enum.KeyCode.E then
+    if not processed and input.KeyCode == Enum.KeyCode.R then
         toggleFly()
     end
 end)
